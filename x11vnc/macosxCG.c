@@ -536,6 +536,8 @@ static CGPoint current_cursor_pos(void) {
 	if (CGSGetCurrentCursorLocation(conn, &pos) != kCGErrorSuccess) {
 		macosx_log("CGSGetCurrentCursorLocation error\n");
 	}
+    pos.x -= macosx_display_x;
+    pos.y -= macosx_display_y;
 
 	display_button_mask = GetCurrentButtonState();
 #if 0
@@ -554,6 +556,8 @@ static CGPoint current_cursor_pos(void) {
 	last_local_mod_mask = display_mod_mask;
 	last_local_x = pos.x;
 	last_local_y = pos.y;
+
+    fprintf(stderr, "Mouse: %d %d\n", last_local_x, last_local_y);
 
 	return pos;
 }
