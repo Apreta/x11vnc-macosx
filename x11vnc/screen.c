@@ -4807,6 +4807,7 @@ void watch_loop(void) {
 		}
 
 		/* sleep a bit to lessen load */
+#if 1
 		wait = choose_delay(dt);
 
 		if (urgent_update) {
@@ -4836,6 +4837,9 @@ void watch_loop(void) {
 				usleep((wait - idt) * 1000);
 			}
 		}
+#else
+        usleep(waitms * 1000);
+#endif        
 
 		cnt++;
 	}
