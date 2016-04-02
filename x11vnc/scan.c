@@ -3433,8 +3433,10 @@ int scan_for_updates(int count_only) {
 
 	/* scan with the initial y to the jitter value from scanlines: */
 	scan_in_progress = 1;
-	tile_count = scan_display(scanlines[scan_count], 0);
-	SCAN_FATAL(tile_count);
+    if (!(macosx_read_cglion && use_xdamage)) {
+        tile_count = scan_display(scanlines[scan_count], 0);
+        SCAN_FATAL(tile_count);
+    }
 
 	/*
 	 * we do the XDAMAGE here too since after scan_display()
