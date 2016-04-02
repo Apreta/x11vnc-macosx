@@ -1,0 +1,5 @@
+autom4te.cache
+*.Po
+*.o
+config.log
+_configs.sed
