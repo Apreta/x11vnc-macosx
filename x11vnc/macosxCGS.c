@@ -602,7 +602,8 @@ void macosxGCS_poll_pb(void) {
 static int macosx_cglion_width = 0;
 static int macosx_cglion_height = 0;
 static int macosx_cglion_bpp = 0;
-static int macosx_cglion_Bpl = 0;
+static int macosx_cglion_scale_w = 0;
+static int macosx_cglion_scale_h = 0;
 
 int macosx_cglion_set_dpy_params(void)  {
 #ifdef MAC_OS_X_VERSION_10_6
@@ -641,13 +642,13 @@ int macosx_cglion_set_dpy_params(void)  {
 	macosx_cglion_width = 0;
 	macosx_cglion_height = 0;
 	macosx_cglion_bpp = 0;
-	macosx_cglion_Bpl = 0;
 
 	if (img != NULL) {
-		macosx_cglion_width  = CGImageGetWidth(img);
-		macosx_cglion_height = CGImageGetHeight(img);
+        macosx_cglion_scale_w = CGImageGetWidth(img) / nw;
+        macosx_cglion_scale_h = CGImageGetHeight(img) / nh;
+        macosx_cglion_width  = nw; //CGImageGetWidth(img);
+        macosx_cglion_height = nh; //CGImageGetHeight(img);
 		macosx_cglion_bpp    = CGImageGetBitsPerPixel(img);
-		macosx_cglion_Bpl    = CGImageGetBytesPerRow(img);
 		CGImageRelease(img);
 		return 1;
 	}
@@ -665,9 +666,9 @@ void macosx_cglion_init(void)  {
 	if (macosx_cglion_set_dpy_params()) {
 		macosx_read_cglion = 1;
 	}
-	fprintf(stderr, "macosx_cglion_init: use_cglion=%d: width %d, height %d, bpp %d, Bpl %d\n",
+	fprintf(stderr, "macosx_cglion_init: use_cglion=%d: width %d, height %d, bpp %d\n",
 	    macosx_read_cglion, macosx_cglion_width, macosx_cglion_height,
-	    macosx_cglion_bpp, macosx_cglion_Bpl);
+	    macosx_cglion_bpp);
 }
 
 void macosx_cglion_fini(void)  {
@@ -682,11 +683,6 @@ int macosx_cglion_get_width(void) {
 int macosx_cglion_get_height(void) {
 	macosx_cglion_set_dpy_params();
 	return macosx_cglion_height;
-}
-
-int macosx_cglion_get_Bpl(void) {
-	macosx_cglion_set_dpy_params();
-	return macosx_cglion_Bpl;
 }
 
 int macosx_cglion_get_bpp(void) {
@@ -706,16 +702,48 @@ int macosx_cglion_get_spp(void) {
 	return 3;
 }
 
+CGImageRef resizeImage(CGImageRef imageRef, int width, int height) {
+  CGRect newRect = CGRectIntegral(CGRectMake(0, 0, width, height));
+
+  CGContextRef context = CGBitmapContextCreate(NULL, width, height,
+                                               CGImageGetBitsPerComponent(imageRef),
+                                               CGImageGetBytesPerRow(imageRef),
+                                               CGImageGetColorSpace(imageRef),
+                                               CGImageGetBitmapInfo(imageRef));
+
+  // Drawing image into context will scale as needed
+  CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
+  CGContextDrawImage(context, newRect, imageRef);
+  
+  CGImageRef newImageRef = CGBitmapContextCreateImage(context);
+
+  CGContextRelease(context);
+
+  return newImageRef;
+}
+
 void macosx_copy_cglion(char *dest, int x, int y, unsigned int w, unsigned int h) {
+    //fprintf(stderr, "Scanning %d %d at %d %d...", w, h, x, y);
 #ifdef MAC_OS_X_VERSION_10_6
-	CGRect r = CGRectMake(x, y, w, h);
+    CGRect r = CGRectMake(x,y,w,h);
 	CGImageRef img = CGDisplayCreateImageForRect(displayID, r);
-	CGDataProviderRef provide = CGImageGetDataProvider(img);
+    int src_width  = CGImageGetWidth(img);
+    int src_height = CGImageGetHeight(img);
+  
+    // Scale image if needed (hdpi display)
+    if (macosx_cglion_scale_w != 1|| macosx_cglion_scale_h != 1) {
+        CGImageRef scaled = resizeImage(img, src_width/macosx_cglion_scale_w,
+                                        src_height/macosx_cglion_scale_h);
+        CGImageRelease(img);
+        img = scaled;
+    }
+  
+    CGDataProviderRef provide = CGImageGetDataProvider(img);
 	CFDataRef data = CGDataProviderCopyData(provide);
 	int img_Bpl = CGImageGetBytesPerRow(img);
 	int img_bpp = CGImageGetBitsPerPixel(img);
 	int img_width = w*(img_bpp/8);
-	const char *src = [(NSData *)data bytes];
+    const char *src = [(NSData *)data bytes];
 
 	char *dst = dest;
 	while (h--) {
@@ -723,11 +751,26 @@ void macosx_copy_cglion(char *dest, int x, int y, unsigned int w, unsigned int h
 		dst += img_width;
 		src += img_Bpl;
 	}
+
+    /* Poor man's scaling
+    const uint32 *src = [(NSData *)data bytes];
+    uint32 *dst = (uint32*)dest;
+    while (h--) {
+      int w1 = src_width/2;
+      while (w1--) {
+        *(dst++) = *(src++);
+        src++;
+      }
+      src += src_width;
+    }
+    */
+  
 	CGImageRelease(img);
 	[(id)data release];
 #else
 	if (dest && x && y && w && h) {}
 #endif
+    //fprintf(stderr, "done\n");
 }
 
 #endif  /* 1 */
