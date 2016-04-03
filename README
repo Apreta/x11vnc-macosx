@@ -1,3 +1,16 @@
+This fork was created to make various improvements in Mac OS X support.
+Changes (C) 2016 Apreta
+
+Improvements:
+- Support hdpi displays (downscales to corresponding "standard" resolution,
+  for example 2560x1440 is shared as 1440x720)
+- Support multiple displays (select alternate display using -macdisplay <x>)
+- Disable scanning for changes and rely on changes reported by OS X
+
+Suggested parameters for good performance on OS X:
+    x11vnc/x11vnc -nonap -xd_area 0 -wait 20 -defer 10
+
+=======================================================================
 
 Copyright (C) 2002-2014 Karl J. Runge <runge@karlrunge.com>
 All rights reserved.
