@@ -67,6 +67,10 @@ void macosxCG_keycode_inject(int down, int keycode);
 
 CGDirectDisplayID displayID = 0;
 
+extern int macosx_display;
+extern int macosx_display_x;
+extern int macosx_display_y;
+
 extern void macosx_log(char *);
 extern int collect_non_X_xdamage(int x_in, int y_in, int w_in, int h_in, int call);
 
@@ -76,7 +80,7 @@ static void macosxCG_callback(CGRectCount n, const CGRect *rects, void *dum) {
 	if (!dum) {}
 	for (i=0; i < (int) n; i++) {
 		if (db > 1) fprintf(stderr, "               : %g %g - %g %g\n", rects[i].origin.x, rects[i].origin.y, rects[i].size.width, rects[i].size.height);
-		collect_non_X_xdamage( (int) rects[i].origin.x, (int) rects[i].origin.y,
+		collect_non_X_xdamage( (int) rects[i].origin.x - macosx_display_x, (int) rects[i].origin.y - macosx_display_y,
 		    (int) rects[i].size.width, (int) rects[i].size.height, 1);
 	}
 }
@@ -150,10 +154,6 @@ extern void macosx_cglion_fini(void);
 int x11vnc_macosx_no_deprecated_localevents = 0;
 int x11vnc_macosx_no_deprecated_postevents  = 0;
 int x11vnc_macosx_no_deprecated_framebuffer = 0;
-
-extern int macosx_display;
-extern int macosx_display_x;
-extern int macosx_display_y;
 
 void macosxCG_init(void) {
 
