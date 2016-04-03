@@ -729,7 +729,7 @@ void macosx_copy_cglion(char *dest, int x, int y, unsigned int w, unsigned int h
 	CGImageRef img = CGDisplayCreateImageForRect(displayID, r);
     int src_width  = CGImageGetWidth(img);
     int src_height = CGImageGetHeight(img);
-  
+
     // Scale image if needed (hdpi display)
     if (macosx_cglion_scale_w != 1|| macosx_cglion_scale_h != 1) {
         CGImageRef scaled = resizeImage(img, src_width/macosx_cglion_scale_w,
@@ -742,26 +742,27 @@ void macosx_copy_cglion(char *dest, int x, int y, unsigned int w, unsigned int h
 	CFDataRef data = CGDataProviderCopyData(provide);
 	int img_Bpl = CGImageGetBytesPerRow(img);
 	int img_bpp = CGImageGetBitsPerPixel(img);
-	int img_width = w*(img_bpp/8);
+    int img_width = w*(img_bpp/8);
     const char *src = [(NSData *)data bytes];
 
-	char *dst = dest;
+    char *dst = dest;
 	while (h--) {
 		memcpy(dst, src, img_width);
 		dst += img_width;
 		src += img_Bpl;
 	}
 
-    /* Poor man's scaling
+    /* Poor man's downscaling (copy 1 pixel out of every 4)
+    int row_extra = img_Bpl/4 - src_width;
     const uint32 *src = [(NSData *)data bytes];
     uint32 *dst = (uint32*)dest;
     while (h--) {
-      int w1 = src_width/2;
-      while (w1--) {
-        *(dst++) = *(src++);
-        src++;
-      }
-      src += src_width;
+        int w1 = src_width/macosx_cglion_scale_w;
+        while (w1--) {
+            *(dst++) = *(src);
+            src += macosx_cglion_scale_w;
+        }
+        src += row_extra + img_Bpl/4 * (macosx_cglion_scale_h - 1);
     }
     */
   

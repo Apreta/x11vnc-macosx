@@ -557,7 +557,7 @@ static CGPoint current_cursor_pos(void) {
 	last_local_x = pos.x;
 	last_local_y = pos.y;
 
-    fprintf(stderr, "Mouse: %d %d\n", last_local_x, last_local_y);
+    //fprintf(stderr, "Mouse: %d %d\n", last_local_x, last_local_y);
 
 	return pos;
 }
