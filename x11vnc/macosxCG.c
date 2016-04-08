@@ -80,8 +80,19 @@ static void macosxCG_callback(CGRectCount n, const CGRect *rects, void *dum) {
 	if (!dum) {}
 	for (i=0; i < (int) n; i++) {
 		if (db > 1) fprintf(stderr, "               : %g %g - %g %g\n", rects[i].origin.x, rects[i].origin.y, rects[i].size.width, rects[i].size.height);
-		collect_non_X_xdamage( (int) rects[i].origin.x - macosx_display_x, (int) rects[i].origin.y - macosx_display_y,
-		    (int) rects[i].size.width, (int) rects[i].size.height, 1);
+        int x = (int) rects[i].origin.x - macosx_display_x;
+        int y = (int) rects[i].origin.y - macosx_display_y;
+        int w = rects[i].size.width;
+        int h = rects[i].size.height;
+        if (x < 0) {
+          w += x;
+          x = 0;
+        }
+        if (y < 0) {
+          h += y;
+          y = 0;
+        }
+		collect_non_X_xdamage(x, y, w, h, 1);
 	}
 }
 
