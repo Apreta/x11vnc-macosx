@@ -7,6 +7,10 @@ Improvements:
 - Support multiple displays (select alternate display using -macdisplay <x>)
 - Disable scanning for changes and rely on changes reported by OS X
 
+Build:
+./configure --without-x --without-ssl
+make
+
 Suggested parameters for good performance on OS X:
     x11vnc/x11vnc -nonap -xd_area 0 -wait 20 -defer 10
 
