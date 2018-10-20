@@ -8,6 +8,8 @@ Improvements:
 - Disable scanning for changes and rely on changes reported by OS X
 
 Build:
+- You'll need XCode and command line tools installed
+- May need common libraries like jpeg, libpng which can be installed by brew
 ./configure --without-x --without-ssl
 make
 
